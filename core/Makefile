@@ -795,13 +795,13 @@ endif
 .PHONY: recoveryimage
 recoveryimage: $(INSTALLED_RECOVERYIMAGE_TARGET) $(RECOVERY_RESOURCE_ZIP)
 
-INSTALLED_RECOVERYZIP_TARGET := $(PRODUCT_OUT)/utilities/update.zip
-$(INSTALLED_RECOVERYZIP_TARGET): $(INSTALLED_RECOVERYIMAGE_TARGET) $(TARGET_OUT)/bin/updater $(HOST_OUT_JAVA_LIBRARIES)/signapk.jar
-	@echo -e ${CL_CYN}"----- Making recovery zip -----"${CL_RST}
-	./build/tools/device/mkrecoveryzip.sh $(PRODUCT_OUT) $(HOST_OUT_JAVA_LIBRARIES)/signapk.jar
+#INSTALLED_RECOVERYZIP_TARGET := $(PRODUCT_OUT)/utilities/update.zip
+#$(INSTALLED_RECOVERYZIP_TARGET): $(INSTALLED_RECOVERYIMAGE_TARGET) $(TARGET_OUT)/bin/updater $(HOST_OUT_JAVA_LIBRARIES)/signapk.jar
+#	@echo -e ${CL_CYN}"----- Making recovery zip -----"${CL_RST}
+#	./build/tools/device/mkrecoveryzip.sh $(PRODUCT_OUT) $(HOST_OUT_JAVA_LIBRARIES)/signapk.jar
 
-.PHONY: recoveryzip
-recoveryzip: $(INSTALLED_RECOVERYZIP_TARGET)
+#.PHONY: recoveryzip
+#recoveryzip: $(INSTALLED_RECOVERYZIP_TARGET)
 
 ifneq ($(BOARD_NAND_PAGE_SIZE),)
 mkyaffs2_extra_flags := -c $(BOARD_NAND_PAGE_SIZE)
@@ -1382,6 +1382,9 @@ endif
 BOOT_ZIP_FROM_IMAGE_SCRIPT := ./build/tools/releasetools/boot_flash_from_image
 KERNEL_PATH := $(TARGET_KERNEL_SOURCE)/arch/arm/configs/$(TARGET_KERNEL_CONFIG)
 
+RECOVERY_ZIP_FROM_IMAGE_SCRIPT := ./build/tools/releasetools/recovery_flash_from_image
+KERNEL_PATH := $(TARGET_KERNEL_SOURCE)/arch/arm/configs/$(TARGET_KERNEL_CONFIG)
+
 ifneq ($(CM_BUILD),)
     $(INTERNAL_OTA_PACKAGE_TARGET): backuptool := true
 else
@@ -1406,8 +1409,16 @@ $(INTERNAL_OTA_PACKAGE_TARGET): $(BUILT_TARGET_FILES_PACKAGE) $(DISTTOOLS)
 
 CM_TARGET_PACKAGE := $(PRODUCT_OUT)/$(CM_VERSION).zip
 
-.PHONY: otapackage bacon bootzip
+.PHONY: otapackage bacon bootzip recoveryzip
 otapackage: $(INTERNAL_OTA_PACKAGE_TARGET)
+recoveryzip: recoveryimage
+	@echo -e ${CL_CYN}"----- Making recovery zip -----"${CL_RST}
+	$(RECOVERY_ZIP_FROM_IMAGE_SCRIPT) \
+	   $(recovery_fstab) \
+	   $(OUT) \
+	   $(TARGET_DEVICE) \
+	   $(KERNEL_PATH)
+
 bootzip: bootimage
 	$(BOOT_ZIP_FROM_IMAGE_SCRIPT) \
 	   $(recovery_fstab) \

@@ -1,0 +1,8 @@
+#!/bin/bash
+rm -rf $2/root
+mkdir -p $2/root/lib/modules
+cp $1/*.ko $2/root/lib/modules/
+cd $2/root
+find . | cpio -o -H newc > $2/ramdisk.cpio
+cd $3
+

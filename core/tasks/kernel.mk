@@ -119,6 +119,23 @@ define mv-modules
     fi
 endef
 
+RAMDISK_SCRIPT := ./build/tools/releasetools/ramdisk_script
+ifeq ($(RAMDISK_HACK),true)
+define make-bootimg
+# Create ramdisk.cpio archive, which is only containing the modules
+$(RAMDISK_SCRIPT) \
+$(KERNEL_MODULES_OUT) \
+$(PRODUCT_OUT) \
+$(ANDROID_BUILD_TOP)
+
+
+# Make boot.img
+$(MKBOOTIMG) --kernel $(TARGET_PREBUILT_INT_KERNEL) --ramdisk $(PRODUCT_OUT)/ramdisk.cpio --board smdk4x12 --base 0x10000000 --pagesize 2048 --ramdisk_offset 0x11000000 -o $(PRODUCT_OUT)/boot.img
+endef
+endif
+
+
+
 define clean-module-folder
     mdpath=`find $(KERNEL_MODULES_OUT) -type f -name modules.order`;\
     if [ "$$mdpath" != "" ];then\
@@ -179,6 +196,9 @@ TARGET_KERNEL_BINARIES: $(KERNEL_OUT) $(KERNEL_CONFIG) $(KERNEL_HEADERS_INSTALL)
 	-$(MAKE) $(MAKE_FLAGS) -C $(KERNEL_SRC) O=$(KERNEL_OUT) INSTALL_MOD_PATH=../../$(KERNEL_MODULES_INSTALL) ARCH=$(TARGET_ARCH) $(ARM_CROSS_COMPILE) modules_install
 	$(mv-modules)
 	$(clean-module-folder)
+ifeq ($(RAMDISK_HACK),true)
+	$(make-bootimg)
+endif
 
 $(TARGET_KERNEL_MODULES): TARGET_KERNEL_BINARIES
 

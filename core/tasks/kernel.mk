@@ -100,7 +100,12 @@ else
 endif
 
 ifeq ($(TARGET_KERNEL_CUSTOM_RAMDISK),true)
-    $(shell sed -i "s;CONFIG_INITRAMFS_SOURCE=\"\.\.;CONFIG_INITRAMFS_SOURCE=\"source/\.\.;" $(TARGET_KERNEL_SOURCE)/arch/arm/configs/$(TARGET_KERNEL_CONFIG))
+GREP_FINDINGS := $(shell grep 'CONFIG_INITRAMFS_SOURCE=\"source/' $(TARGET_KERNEL_SOURCE)/arch/arm/configs/$(TARGET_KERNEL_CONFIG))
+
+ifeq ($(GREP_FINDINGS), )
+   $(shell sed -i "s;CONFIG_INITRAMFS_SOURCE=\";CONFIG_INITRAMFS_SOURCE=\"source/;" $(TARGET_KERNEL_SOURCE)/arch/arm/configs/$(TARGET_KERNEL_CONFIG))
+endif
+
 endif
 
 ifeq ($(FULL_KERNEL_BUILD),true)

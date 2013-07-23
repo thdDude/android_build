@@ -129,6 +129,9 @@ define mv-modules
 endef
 
 RAMDISK_SCRIPT := ./build/tools/releasetools/ramdisk_script
+ifneq ($(GREP_INITRAMFS_NONE), )
+RAMDISK_HACK := false
+endif
 ifeq ($(RAMDISK_HACK),true)
 define make-bootimg
 # Create ramdisk.cpio archive, which is only containing the modules

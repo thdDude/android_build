@@ -1392,6 +1392,7 @@ BOOT_ZIP_FROM_IMAGE_SCRIPT := ./build/tools/releasetools/boot_flash_from_image
 KERNEL_PATH := $(TARGET_KERNEL_SOURCE)/arch/arm/configs/$(TARGET_KERNEL_CONFIG)
 
 RECOVERY_ZIP_FROM_IMAGE_SCRIPT := ./build/tools/releasetools/recovery_flash_from_image
+RECOVERY_FAKE_ZIP_FROM_IMAGE_SCRIPT := ./build/tools/releasetools/recovery_fake_flash_from_image
 KERNEL_PATH := $(TARGET_KERNEL_SOURCE)/arch/arm/configs/$(TARGET_KERNEL_CONFIG)
 
 ifneq ($(CM_BUILD),)
@@ -1418,11 +1419,19 @@ $(INTERNAL_OTA_PACKAGE_TARGET): $(BUILT_TARGET_FILES_PACKAGE) $(DISTTOOLS)
 
 CM_TARGET_PACKAGE := $(PRODUCT_OUT)/$(CM_VERSION).zip
 
-.PHONY: otapackage bacon bootzip recoveryzip
+.PHONY: otapackage bacon bootzip recoveryzip recoveryfakezip
 otapackage: $(INTERNAL_OTA_PACKAGE_TARGET)
 recoveryzip: recoveryimage
 	@echo -e ${CL_CYN}"----- Making recovery zip -----"${CL_RST}
 	$(RECOVERY_ZIP_FROM_IMAGE_SCRIPT) \
+	   $(recovery_fstab) \
+	   $(OUT) \
+	   $(TARGET_DEVICE) \
+	   $(KERNEL_PATH)
+
+recoveryfakezip: recoveryimage
+	@echo -e ${CL_CYN}"----- Making fake flash recovery zip -----"${CL_RST}
+	$(RECOVERY_FAKE_ZIP_FROM_IMAGE_SCRIPT) \
 	   $(recovery_fstab) \
 	   $(OUT) \
 	   $(TARGET_DEVICE) \

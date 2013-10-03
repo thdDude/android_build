@@ -48,42 +48,6 @@ echo '       delete_recursive("/etc");' >> $UPDATER_DIR/updater-script
 echo 'package_extract_dir("etc", "/etc");' >> $UPDATER_DIR/updater-script
 echo 'package_extract_dir("sbin", "/sbin");' >> $UPDATER_DIR/updater-script
 echo 'package_extract_dir("res", "/res");' >> $UPDATER_DIR/updater-script
-echo 'symlink("../init", "/sbin/ueventd");' >> $UPDATER_DIR/updater-script
-echo 'symlink("recovery", "/sbin/busybox", "/sbin/volume", "/sbin/busybox",
- "/sbin/dump_image", "/sbin/flash_image", "/sbin/erase_image", "/sbin/nandroid",
- "/sbin/unyaffs", "/sbin/mkyaffs2image", "/sbin/edify", "/sbin/reboot");' >> $UPDATER_DIR/updater-script
-echo 'symlink("busybox", "/sbin/egrep", "/sbin/dd", "/sbin/ps", "/sbin/bbconfig",
- "/sbin/dc", "/sbin/gunzip", "/sbin/top", "/sbin/nice", "/sbin/du",
- "/sbin/losetup", "/sbin/bzcat", "/sbin/expr", "/sbin/sleep", "/sbin/nohup",
- "/sbin/ls", "/sbin/sh", "/sbin/unlzop", "/sbin/strings", "/sbin/fdisk",
- "/sbin/cksum", "/sbin/cat", "/sbin/mount", "/sbin/xargs", "/sbin/sha512sum",
- "/sbin/mktemp", "/sbin/gzip", "/sbin/pkill", "/sbin/mke2fs", "/sbin/find",
- "/sbin/mv", "/sbin/whoami", "/sbin/cmp", "/sbin/realpath", "/sbin/umount",
- "/sbin/printf", "/sbin/sha256sum", "/sbin/echo", "/sbin/devmem",
- "/sbin/readlink", "/sbin/pidof", "/sbin/touch", "/sbin/more", "/sbin/ln",
- "/sbin/split", "/sbin/dirname", "/sbin/sync", "/sbin/tac", "/sbin/zcat",
- "/sbin/tty", "/sbin/tr", "/sbin/reset", "/sbin/rdev", "/sbin/cpio",
- "/sbin/stty", "/sbin/yes", "/sbin/sed", "/sbin/od", "/sbin/chmod",
- "/sbin/unzip", "/sbin/lsusb", "/sbin/bzip2", "/sbin/printenv", "/sbin/time",
- "/sbin/basename", "/sbin/fgrep", "/sbin/less", "/sbin/df", "/sbin/cal",
- "/sbin/[[", "/sbin/lzop", "/sbin/length", "/sbin/renice", "/sbin/modprobe",
- "/sbin/uuencode", "/sbin/sort", "/sbin/uniq", "/sbin/chgrp", "/sbin/pwd",
- "/sbin/bunzip2", "/sbin/insmod", "/sbin/freeramdisk", "/sbin/date",
- "/sbin/unix2dos", "/sbin/cut", "/sbin/head", "/sbin/awk", "/sbin/free",
- "/sbin/tee", "/sbin/sysctl", "/sbin/uname", "/sbin/setsid", "/sbin/which",
- "/sbin/rmdir", "/sbin/run-parts", "/sbin/true", "/sbin/mountpoint",
- "/sbin/kill", "/sbin/mkswap", "/sbin/grep", "/sbin/env", "/sbin/pgrep",
- "/sbin/rmmod", "/sbin/killall", "/sbin/patch", "/sbin/usleep", "/sbin/catv",
- "/sbin/lzopcat", "/sbin/depmod", "/sbin/install", "/sbin/mkfifo", "/sbin/cp",
- "/sbin/seq", "/sbin/fold", "/sbin/killall5", "/sbin/stat", "/sbin/rm",
- "/sbin/dos2unix", "/sbin/hexdump", "/sbin/ash", "/sbin/tar",
- "/sbin/mkfs.ext2", "/sbin/wc", "/sbin/fuser", "/sbin/md5sum", "/sbin/diff",
- "/sbin/clear", "/sbin/lspci", "/sbin/swapoff", "/sbin/id", "/sbin/chown",
- "/sbin/test", "/sbin/uudecode", "/sbin/lsmod", "/sbin/false", "/sbin/chroot",
- "/sbin/uptime", "/sbin/swapon", "/sbin/getopt", "/sbin/tail", "/sbin/mkdir",
- "/sbin/watch", "/sbin/sha1sum", "/sbin/[", "/sbin/dmesg", "/sbin/mknod");' >> $UPDATER_DIR/updater-script
-echo 'set_perm_recursive(0, 2000, 0755, 0755, "/sbin");' >> $UPDATER_DIR/updater-script
-echo 'run_program("/sbin/killrecovery.sh");' >> $UPDATER_DIR/updater-script
 
 # Copy the recovery files
 cp -r $OUT/recovery/root/etc $ZIP_DIR/
@@ -91,12 +55,18 @@ cp -r $OUT/recovery/root/etc $ZIP_DIR/
 mkdir -p $ZIP_DIR/sbin
 for file in $OUT/recovery/root/sbin/*
 do
-  if [ ! -h $file ]; then
     filename=$(basename $file)
+  if [ ! -h $file ]; then
     cp $OUT/recovery/root/sbin/$filename $ZIP_DIR/sbin/
+  else
+    symlink_target=$(readlink $file)
+    echo "symlink("'"'$symlink_target'"'", "'"'/sbin/$filename'"'");" >> $UPDATER_DIR/updater-script
   fi
 done
 cp -r $OUT/recovery/root/res $ZIP_DIR/
+
+echo 'set_perm_recursive(0, 2000, 0755, 0755, "/sbin");' >> $UPDATER_DIR/updater-script
+echo 'run_program("/sbin/killrecovery.sh");' >> $UPDATER_DIR/updater-script
 
 #zip package
 cd $ZIP_DIR

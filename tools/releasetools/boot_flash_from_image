@@ -13,8 +13,23 @@ stringarray=(${LINE})
 bootpartition=${stringarray[2]}
 partition_type=${stringarray[1]}
 KERNELVERSION=`sed -n -e "/CONFIG_LOCALVERSION/s/^.*=//p" $4`
-SYSTEMNUMBER=`sed -n '/\/system/ =' $FSTAB`
-SYSTEMLINE=`sed -n "${SYSTEMNUMBER}p" $FSTAB`
+
+if [ "$KERNELVERSION" != "" ]
+then
+    VERSION=`echo $KERNELVERSION | cut -d '-' -f2 | cut -d '"' -f1`
+    KERNEL_VERSION=$VERSION-kernel
+else
+    KERNEL_VERSION=Devil-$DEVICE-kernel
+fi
+#rm $OUT/$KERNEL_VERSION
+ZIP_DIR=$OUT/$KERNEL_VERSION
+mkdir $ZIP_DIR
+TMPFSTAB=$ZIP_DIR/tmp_fstab
+
+sed "s/system)//g" $FSTAB > $TMPFSTAB
+
+SYSTEMNUMBER=`sed -n '/\/system/ =' $TMPFSTAB`
+SYSTEMLINE=`sed -n "${SYSTEMNUMBER}p" $TMPFSTAB`
 systemarray=(${SYSTEMLINE})
 systemtype=${systemarray[1]}
 systemmount=${systemarray[2]}
@@ -30,23 +45,18 @@ then
     make signapk &>> /dev/null
 fi
 
-if [ "$KERNELVERSION" != "" ]
-then
-    VERSION=`echo $KERNELVERSION | cut -d '-' -f2 | cut -d '"' -f1`
-    KERNEL_VERSION=$VERSION-kernel
-else
-    KERNEL_VERSION=Devil-$DEVICE-kernel
-fi
-#rm $OUT/$KERNEL_VERSION
-ZIP_DIR=$OUT/$KERNEL_VERSION
-mkdir $ZIP_DIR
-
 # Make the updater-script
 UPDATER_DIR=$ZIP_DIR/META-INF/com/google/android
 mkdir -p $UPDATER_DIR
 cp $OUT/obj/EXECUTABLES/updater_intermediates/updater $UPDATER_DIR/update-binary
 echo 'ui_print("Installing Devil Kernel...");' > $UPDATER_DIR/updater-script
-if [ "$partition_type" = "mtd" ]
+
+if grep -q aries-common $FSTAB; then
+
+
+
+
+elif [ "$partition_type" = "mtd" ]
 then
     echo 'package_extract_file("boot.img", "/tmp/boot.img");' >> $UPDATER_DIR/updater-script
     echo "write_raw_image("'"/tmp/boot.img"'", "'"'$bootpartition'"'");" >> $UPDATER_DIR/updater-script

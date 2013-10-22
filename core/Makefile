@@ -1395,10 +1395,14 @@ RECOVERY_ZIP_FROM_IMAGE_SCRIPT := ./build/tools/releasetools/recovery_flash_from
 RECOVERY_FAKE_ZIP_FROM_IMAGE_SCRIPT := ./build/tools/releasetools/recovery_fake_flash_from_image
 KERNEL_PATH := $(TARGET_KERNEL_SOURCE)/arch/arm/configs/$(TARGET_KERNEL_CONFIG)
 
+ifeq ($(WITH_GMS),true)
+    $(INTERNAL_OTA_PACKAGE_TARGET): backuptool := false
+else
 ifneq ($(CM_BUILD),)
     $(INTERNAL_OTA_PACKAGE_TARGET): backuptool := true
 else
     $(INTERNAL_OTA_PACKAGE_TARGET): backuptool := false
+endif
 endif
 
 ifeq ($(TARGET_OTA_ASSERT_DEVICE),)
@@ -1408,6 +1412,7 @@ else
 endif
 
 $(INTERNAL_OTA_PACKAGE_TARGET): $(BUILT_TARGET_FILES_PACKAGE) $(DISTTOOLS)
+	@echo "$(OTA_FROM_TARGET_SCRIPT)" > $(PRODUCT_OUT)/ota_script_path
 	@echo -e ${CL_YLW}"Package OTA:"${CL_RST}" $@"
 	MKBOOTIMG=$(BOARD_CUSTOM_BOOTIMG_MK) \
 	$(OTA_FROM_TARGET_SCRIPT) -v \
